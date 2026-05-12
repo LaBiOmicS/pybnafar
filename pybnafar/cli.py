@@ -28,7 +28,7 @@ Exemplos de uso:
     args = parser.parse_args()
     
     if args.dashboard:
-        dashboard_path = os.path.join(os.path.dirname(__file__), "..", "examples", "dashboard.py")
+        dashboard_path = os.path.join(os.path.dirname(__file__), "dashboard.py")
         print(f"🚀 Iniciando Dashboard pybnafar...")
         subprocess.run(["streamlit", "run", dashboard_path, "--", "--workspace", args.workspace])
         return

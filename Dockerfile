@@ -23,4 +23,4 @@ VOLUME /app/bnafar_workspace
 USER $MAMBA_USER
 
 # Comando de execução
-ENTRYPOINT ["micromamba", "run", "-n", "base", "streamlit", "run", "pybnafar/examples/dashboard.py", "--server.port=8501", "--server.address=0.0.0.0", "--", "--workspace", "/app/bnafar_workspace"]
+ENTRYPOINT ["micromamba", "run", "-n", "base", "streamlit", "run", "pybnafar/pybnafar/dashboard.py", "--server.port=8501", "--server.address=0.0.0.0", "--", "--workspace", "/app/bnafar_workspace"]

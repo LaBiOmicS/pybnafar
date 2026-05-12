@@ -1,44 +1,90 @@
-# Technical Documentation: pybnafar v2.1
+# Technical Reference Manual: pybnafar v2.1
 
-## 1. Data Engineering Architecture
-
-### Data Lake (Hive-Partitioned)
-`pybnafar` implements a partitioned storage strategy using **Apache Arrow**.
-- **Schema Enforcement**: All snapshots are normalized against `schema.py`.
-- **Data Drift Detection**: The system logs whenever the Ministry of Health adds or changes columns in the source CSV.
-- **Partitioning Strategy**: Data is partitioned by State (`sg_uf`) and Year-Month (`ano_mes`).
-
-### Resilience & Atomic Writes
-To prevent corruption, writes are performed in a `_processing_temp` directory. A manifest JSON file is generated for each snapshot, containing a SHA-256 hash of the original file for provenance tracking.
+`pybnafar` is a specialized SDK for the Brazilian National Pharmaceutical Database. This document details every module, class, and method available.
 
 ---
 
-## 2. Clinical Intelligence (Analytics)
+## 1. Core Module: `Bnafar`
+The main entry point for the library.
 
-### Data Confidence Index (DCI)
-A weighted metric (0.0 to 1.0) based on:
-- **Reporting Frequency (40%)**: Consistency of monthly reports.
-- **Network Coverage (40%)**: Ratio of active CNES establishments.
-- **Recency (20%)**: Delay since the last update.
+### `Bnafar(workspace='bnafar_system')`
+Initializes the environment and directory structure.
+- **`workspace`** (str): The path to the directory where data will be stored. Defaults to `'bnafar_system'`. It will create subdirectories: `/raw`, `/lake_partitioned`, and `/manifests`.
 
-### Rupture Detection
-Distinguishes between **Confirmed Stockouts** (stock quantity went to zero) and **Compliance Silence** (municipality failed to report).
+### `sync(use_api=True)`
+Synchronizes local storage with official OpenDATASUS snapshots.
+- **`use_api`** (bool): If `True`, attempts to use the official CKAN API. If `False` or if the API fails, it falls back to web scraping.
+- **Logic**: It identifies missing snapshots by comparing local manifests with remote resources, downloads them, and processes them into the Data Lake.
 
----
-
-## 3. Interoperability (RNDS/FHIR)
-
-The library uses `fhir.resources` for strict R4 validation.
-- **Resource**: `InventoryReport`.
-- **Profiles**: Aligned with the Brazilian National Health Data Network (RNDS).
-- **Terminology**: Uses `http://purl.org/obm/catmat` for medicine coding.
+### `load_optimized(ufs=None, months=None)`
+High-performance loading of the Data Lake using Hive-partition pushdown.
+- **`ufs`** (List[str], optional): List of State initials (e.g., `['SP', 'MG']`). If `None`, loads all states.
+- **`months`** (List[str], optional): List of Year-Month strings (format `YYYY-MM`). If `None`, loads all dates.
+- **Returns**: `pd.DataFrame` containing the filtered dataset.
 
 ---
 
-## 4. Deployment & Reproducibility
+## 2. Analytics Module: `BnafarAnalytics`
+Advanced mathematical functions for public health surveillance.
 
-### Micromamba / Conda
-We use `environment.yml` for isolated environment management, ensuring that C-extensions for PyArrow and Pandas are correctly linked.
+### `calculate_confidence_score(df)`
+Generates the Data Confidence Index (DCI) for each municipality.
+- **`df`** (pd.DataFrame): The input dataset.
+- **Metrics (Weighted)**:
+  - *Temporal Consistency (40%)*: Ratio of cycles reported vs. total cycles.
+  - *Network Coverage (40%)*: Ratio of active CNES establishments in the last cycle vs. historical maximum.
+  - *Recency (20%)*: Proximity of the last report to the current date.
+- **Returns**: A DataFrame with `confidence_score`, `confidence_category` (Low, Medium, High), and metadata.
 
-### Docker
-The containerized version runs the **Streamlit Dashboard** by default, mounting the workspace as a persistent volume to allow data persistence across container restarts.
+### `detect_real_ruptures(df)`
+Distinguishes between actual medicine shortages and reporting failures.
+- **`df`** (pd.DataFrame): The input dataset.
+- **Logic**: Compares stock levels between the two most recent cycles.
+- **Returns**: A Dictionary with:
+  - `confirmed_ruptures`: Products where stock was > 0 and became 0.
+  - `reporting_failures`: Products where stock was > 0 and is now missing (NaN).
+
+### `calculate_priority_waste(df, days=90)`
+Ranks stock at risk of expiration weighted by public health criticality.
+- **`df`** (pd.DataFrame): The input dataset.
+- **`days`** (int): Expiration window in days.
+- **Criticality Weights**: High-cost Specialized meds (E) = 3; Strategic (S) = 2; Basic (B/O) = 1.
+- **Returns**: A DataFrame sorted by a `severity_index`.
+
+---
+
+## 3. Interoperability: `BnafarInterop`
+Standardizes data for international and national health networks.
+
+### `to_fhir_inventory(df)`
+Exports data to HL7 FHIR R4.
+- **`df`** (pd.DataFrame): Data to export (usually filtered to a specific municipality).
+- **Profile**: Compliant with RNDS (Rede Nacional de Dados de Saúde).
+- **Format**: Returns a string (JSON-LD) containing a list of `InventoryReport` resources.
+
+---
+
+## 4. Diagnostics: `BnafarDiagnostics`
+Ensures ethical and technical integrity.
+
+### `check_geographic_bias(df)`
+Identifies states or regions underrepresented in the dataset.
+- **`df`** (pd.DataFrame): The input dataset.
+- **Warning**: Automatically logs an ethical notice regarding infrastructure-driven bias.
+
+### `validate_integrity(df)`
+Detects logistical outliers.
+- **`df`** (pd.DataFrame): The input dataset.
+- **Threshold**: Flags any record with `qt_estoque` > 1,000,000 units.
+
+---
+
+## 5. Processor: `BnafarProcessor`
+Low-level engine for data transformation.
+
+### `process_and_partition(csv_path, output_dir, manifest_dir, metadata)`
+Transforms raw CSV into Parquet.
+- **`csv_path`** (str): Path to raw CSV.
+- **`output_dir`** (str): Path to Data Lake.
+- **`manifest_dir`** (str): Path to save metadata.
+- **Features**: Schema enforcement, atomic writing (via temp dirs), and Hive partitioning.

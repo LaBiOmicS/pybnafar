@@ -1,37 +1,41 @@
 # pybnafar 🇧🇷 - SDK de Inteligência para o SUS
 
-**pybnafar** é uma ferramenta de inovação para transformar a gestão da Assistência Farmacêutica no Brasil. Automatizamos o acesso aos dados do BNAFAR (OpenDATASUS), permitindo que gestores tomem decisões baseadas em evidências.
+**pybnafar** é uma solução de ponta para a gestão de dados da Assistência Farmacêutica no Brasil. Esta ferramenta automatiza o trabalho pesado de baixar, limpar e organizar os dados do BNAFAR, permitindo que você foque no que importa: **políticas públicas baseadas em evidências**.
 
-## 🏆 Inovação para o SUS
+---
 
-- **Evite o Desperdício**: Identifique medicamentos próximos ao vencimento por município.
-- **Preveja a Falta**: Detecte rupturas de estoque antes que o paciente fique sem o remédio.
-- **Interoperabilidade**: Gere arquivos no padrão **HL7 FHIR** para integração com a **RNDS**.
-- **Ética**: Analise a qualidade do dado com o Score de Confiança, evitando preconceitos algorítmicos.
+## 🏆 Valor Estratégico para a Gestão
 
-## 🖥️ Como Usar (Sem Programação)
+### 1. Previsão de Faltas (Rupturas)
+O sistema detecta automaticamente municípios onde o estoque de medicamentos críticos zerou entre dois ciclos de reporte, diferenciando a "falta real" de um simples "esquecimento de digitação".
 
-Se você tem o **Docker** instalado, basta rodar um comando para ter o painel interativo:
+### 2. Combate ao Desperdício
+Através do monitoramento de prazos de validade e pesos de criticidade (Ex: Medicamentos de Alto Custo), o sistema gera um ranking de prioridade para redistribuição de estoques próximos ao vencimento.
 
+### 3. Governança Ética (Score de Confiança)
+Não penalize gestores por dados ruins sem entender o contexto. Nosso algoritmo identifica municípios com falhas de infraestrutura (internet/pessoal) que geram dados incompletos, garantindo uma avaliação justa e técnica.
+
+---
+
+## 🖥️ Como Utilizar
+
+### Interface Visual (Sem Programação)
+Para quem prefere uma interface gráfica amigável:
 ```bash
-docker build -t pybnafar .
-docker run -p 8501:8501 -v $(pwd)/meus_dados:/app/bnafar_workspace pybnafar
-```
-Acesse `http://localhost:8501` no seu navegador.
-
-## 🛠️ Linha de Comando (CLI)
-
-```bash
-# Sincroniza dados do governo
-pybnafar --sync
-
-# Abre o painel interativo (Streamlit)
 pybnafar --dashboard
-
-# Relatório de inteligência no terminal
-pybnafar --report --ufs RJ MG
 ```
 
-## 📚 Documentação
-- [Cenário de Uso e Replicação](USAGE_SCENARIO.md)
-- [Referência Técnica (Inglês)](docs/DOCUMENTATION.md)
+### Linha de Comando (Automação)
+Ideal para TI e analistas de dados:
+- `pybnafar --sync`: Mantém seu Data Lake local atualizado com o Ministério da Saúde.
+- `pybnafar --report --ufs MG`: Gera um resumo instantâneo da saúde farmacêutica de Minas Gerais.
+
+### Integração com a RNDS
+A biblioteca gera arquivos no formato **HL7 FHIR R4**, prontos para serem integrados aos sistemas da Rede Nacional de Dados de Saúde.
+
+---
+
+## 📚 Documentação Adicional
+- [Manual Técnico Detalhado](docs/DOCUMENTATION.md)
+- [Cenário de Uso Prático](USAGE_SCENARIO.md)
+- [Como Contribuir](CONTRIBUTING.md)

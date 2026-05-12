@@ -74,9 +74,13 @@ class Bnafar:
         filter_expr = None
         if ufs:
             filter_expr = ds.field("sg_uf").isin(ufs)
+        
         if months:
             m_filter = ds.field("ano_mes").isin(months)
-            filter_expr = filter_expr & m_filter if filter_expr else m_filter
+            if filter_expr is not None:
+                filter_expr = filter_expr & m_filter
+            else:
+                filter_expr = m_filter
             
         df = dataset.to_table(filter=filter_expr).to_pandas()
         

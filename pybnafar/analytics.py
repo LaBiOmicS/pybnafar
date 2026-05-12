@@ -104,7 +104,8 @@ class BnafarAnalytics:
         waste_risk = df[(df['dias_para_vencer'] > 0) & (df['dias_para_vencer'] <= days)].copy()
         
         # Use criticality weights from constants
-        waste_risk['critical_weight'] = waste_risk['tp_produto'].map(CRITICALITY_WEIGHTS).fillna(1)
+        waste_risk['critical_weight'] = pd.to_numeric(waste_risk['tp_produto'].map(CRITICALITY_WEIGHTS).fillna(1))
+        waste_risk['qt_estoque'] = pd.to_numeric(waste_risk['qt_estoque'], errors='coerce').fillna(0)
         waste_risk['severity_index'] = waste_risk['qt_estoque'] * waste_risk['critical_weight']
         
         return waste_risk.groupby(['sg_uf', 'no_municipio', 'ds_produto']).agg({

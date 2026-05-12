@@ -25,7 +25,8 @@ class BnafarProcessor:
                     if 'datetime' in str(dtype):
                         df[col] = pd.to_datetime(df[col], errors='coerce')
                     elif dtype == 'float64':
-                        df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce')
+                        # Force numeric and handle commas
+                        df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce').astype('float64')
                     else:
                         df[col] = df[col].astype(dtype)
                 except Exception as e:

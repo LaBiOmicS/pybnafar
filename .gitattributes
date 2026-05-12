@@ -1,0 +1,12 @@
+# Handle line endings automatically
+* text=auto
+
+# Force LF for shell scripts and dockerfiles
+*.sh text eol=lf
+Dockerfile text eol=lf
+
+# Mark Python files as such
+*.py text diff=python
+
+# Ensure type checking support
+pybnafar/py.typed

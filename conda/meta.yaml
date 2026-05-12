@@ -1,0 +1,55 @@
+{% set name = "pybnafar" %}
+{% set version = "2.1.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  path: ..
+
+build:
+  number: 0
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv
+  entry_points:
+    - pybnafar = pybnafar.cli:main
+
+requirements:
+  host:
+    - python >=3.9
+    - pip
+    - setuptools >=61.0
+  run:
+    - python >=3.9
+    - pandas >=2.0.0
+    - pyarrow >=12.0.0
+    - numpy >=1.24.0
+    - requests >=2.28.0
+    - beautifulsoup4 >=4.12.0
+    - tqdm >=4.65.0
+    - streamlit >=1.24.0
+    - plotly >=5.15.0
+    - fhir.resources >=7.1.0
+
+test:
+  imports:
+    - pybnafar
+  commands:
+    - pybnafar --help
+
+about:
+  home: https://github.com/usuario/pybnafar
+  license: MIT
+  license_file: LICENSE
+  summary: 'High-performance Python SDK for the Brazilian Pharmaceutical Database (BNAFAR)'
+  description: |
+    A library designed for researchers and health managers to automate 
+    the data pipeline from the OpenDATASUS portal to generating strategic 
+    indicators for evidence-based policies.
+  doc_url: https://github.com/usuario/pybnafar/blob/main/docs/DOCUMENTATION.md
+  dev_url: https://github.com/usuario/pybnafar
+
+extra:
+  recipe-maintainers:
+    - fabianomenegidio

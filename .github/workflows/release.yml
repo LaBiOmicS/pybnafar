@@ -1,11 +1,32 @@
-name: CI/CD Release
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
+  quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Linting Tools
+        run: pip install ruff mypy fhir.resources pandas pyarrow types-requests types-setuptools
+      - name: Run Ruff (Linting)
+        run: ruff check .
+      - name: Run MyPy (Type Checking)
+        run: mypy pybnafar/ --ignore-missing-imports
+
   test:
+    name: Unit Tests & Coverage
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,26 +37,38 @@ jobs:
       - name: Install dependencies
         run: |
           pip install .[test]
-      - name: Run Tests
+          pip install pytest-cov
+      - name: Run Tests with Coverage
         run: |
-          pytest pybnafar/tests/
+          pytest --cov=pybnafar pybnafar/tests/ --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   publish-pypi:
+    name: Publish to PyPI
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && contains(github.event.head_commit.message, 'release')
+    if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
-      - name: Build and Publish to PyPI
+      - name: Build and Publish
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
 
   publish-docker:
-    needs: publish-pypi
+    name: Publish Docker Image
+    needs: test
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -47,6 +80,7 @@ jobs:
           context: .
           file: pybnafar/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/pybnafar:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/pybnafar:2.1.0
+            labiomics/pybnafar:latest
+            labiomics/pybnafar:${{ github.ref_name }}

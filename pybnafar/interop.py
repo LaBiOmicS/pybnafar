@@ -6,6 +6,8 @@ from fhir.resources.coding import Coding
 from fhir.resources.extension import Extension
 from fhir.resources.quantity import Quantity
 
+from typing import List, Dict, Any
+
 class BnafarInterop:
     """
     Standardizes data for healthcare interoperability with strict HL7 FHIR validation.
@@ -14,7 +16,7 @@ class BnafarInterop:
     @staticmethod
     def to_fhir_inventory(df: pd.DataFrame) -> str:
         """Converts stock DataFrame to HL7 FHIR InventoryReport resources (RNDS-style)."""
-        resources = []
+        resources: List[Dict[str, Any]] = []
         for _, row in df.iterrows():
             date_str = row['dt_posicao_estoque'].strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + "Z" if pd.notnull(row['dt_posicao_estoque']) else None
             

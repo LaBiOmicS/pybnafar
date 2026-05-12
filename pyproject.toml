@@ -55,5 +55,23 @@ Issues = "https://github.com/usuario/pybnafar/issues"
 where = ["."]
 include = ["pybnafar*"]
 
-[tool.setuptools.package-data]
-pybnafar = ["py.typed"]
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "B", "I", "N"]
+ignore = ["D100", "D104"]
+
+[tool.ruff.isort]
+known-first-party = ["pybnafar"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "--strict-markers"

@@ -18,4 +18,4 @@ def test_to_fhir_inventory():
     
     assert isinstance(data, list)
     assert data[0]['resourceType'] == 'InventoryReport'
-    assert data[0]['item'][0]['quantity']['value'] == 50.0
+    assert data[0]['inventoryListing'][0]['items'][0]['quantity']['value'] == 50.0

@@ -9,12 +9,12 @@ tags:
   - SUS
 authors:
   - name: Fabiano Menegidio
-    orcid: 0000-0000-0000-0000
+    orcid: 0000-0002-3164-1627
     affiliation: 1
 affiliations:
   - name: Independent Researcher / Health Informatics Specialist
     index: 1
-date: 8 May 2026
+date: 18 May 2026
 bibliography: paper.bib
 ---
 
@@ -22,7 +22,7 @@ bibliography: paper.bib
 
 The **Base Nacional de Dados de Ações e Serviços da Assistência Farmacêutica (BNAFAR)** is the central pillar of the Brazilian Unified Health System (SUS) for monitoring pharmaceutical supply chains. Updated bi-monthly by over 5,500 municipalities, it tracks the availability of essential medicines for 200 million citizens. However, the raw data provided via the OpenDATASUS portal presents significant technical barriers: massive volumes (millions of records per snapshot), inconsistent schemas, and lack of historical continuity.
 
-`pybnafar` is a high-performance Python SDK designed to bridge the gap between raw public health data and actionable intelligence. It implements an automated, atomic data pipeline that transforms unstable CSV snapshots into a curated, Hive-partitioned Data Lake. Beyond data engineering, the library embeds clinical and ethical intelligence through standardized metrics for stockout detection, waste risk assessment, and geographic bias auditing.
+`pybnafar` is a high-performance Python SDK designed to bridge the gap between raw public health data and actionable intelligence. It implements an automated, atomic data pipeline that transforms unstable CSV snapshots into a curated, Hive-partitioned Data Lake using `Pandas` [@pandas] and `PyArrow` [@pyarrow]. Beyond data engineering, the library embeds clinical and ethical intelligence through standardized metrics for stockout detection, waste risk assessment, and geographic bias auditing.
 
 # Statement of Need
 
@@ -49,8 +49,5 @@ The library is organized into specialized modules:
 # Acknowledgements
 
 The author acknowledges the commitment of the Brazilian Ministry of Health to open data and the support of the biomedical engineering community in fostering open-source solutions for public health.
-
-# References
-ions for public health.
 
 # References

@@ -20,6 +20,7 @@ Exemplos de uso:
     group.add_argument('--sync', action='store_true', help='Sincroniza snapshots oficiais do OpenDATASUS')
     group.add_argument('--dashboard', action='store_true', help='Inicia o Painel Interativo (Streamlit)')
     group.add_argument('--report', action='store_true', help='Gera relatório de integridade e inteligência no terminal')
+    group.add_argument('--version', action='version', version=f"pybnafar {Bnafar.__version__ if hasattr(Bnafar, '__version__') else '2.1.0'}", help='Mostra a versão instalada')
     
     config = parser.add_argument_group('Configuração')
     config.add_argument('--workspace', type=str, default='bnafar_system', help='Diretório de trabalho (Data Lake)')

@@ -21,7 +21,8 @@ COLUMN_ALIASES = {
     'nu_latitude': 'latitude',
     'nu_longitude': 'longitude',
     'co_municipio': 'co_municipio_ibge',
-    'quantidade': 'qt_estoque'
+    'quantidade': 'qt_estoque',
+    'dt_ciclo_bnafar': 'dt_posicao_estoque'
 }
 
 def detect_data_drift(df: pd.DataFrame):

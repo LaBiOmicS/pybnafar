@@ -26,22 +26,22 @@ class BnafarAnalytics:
             return pd.DataFrame()
 
         df = df.copy()
-        df['dt_ciclo_bnafar'] = pd.to_datetime(df['dt_ciclo_bnafar'])
+        df['dt_posicao_estoque'] = pd.to_datetime(df['dt_posicao_estoque'])
 
         # 1. Temporal Consistency (Reporting Frequency)
-        total_cycles = df['dt_ciclo_bnafar'].nunique()
-        temporal_freq = df.groupby('co_municipio_ibge')['dt_ciclo_bnafar'].nunique() / total_cycles
+        total_cycles = df['dt_posicao_estoque'].nunique()
+        temporal_freq = df.groupby('co_municipio_ibge')['dt_posicao_estoque'].nunique() / total_cycles
 
         # 2. Network Coverage (Establishment reporting rate)
-        cnes_count = df.groupby(['co_municipio_ibge', 'dt_ciclo_bnafar'])['co_cnes'].nunique().reset_index()
+        cnes_count = df.groupby(['co_municipio_ibge', 'dt_posicao_estoque'])['co_cnes'].nunique().reset_index()
         max_cnes = cnes_count.groupby('co_municipio_ibge')['co_cnes'].max()
-        current_cycle = df['dt_ciclo_bnafar'].max()
-        current_cnes = cnes_count[cnes_count['dt_ciclo_bnafar'] == current_cycle].set_index('co_municipio_ibge')['co_cnes']
+        current_cycle = df['dt_posicao_estoque'].max()
+        current_cnes = cnes_count[cnes_count['dt_posicao_estoque'] == current_cycle].set_index('co_municipio_ibge')['co_cnes']
         network_coverage = (current_cnes / max_cnes).fillna(0)
 
         # 3. Recency (Penalty for delay)
-        max_date = df['dt_ciclo_bnafar'].max()
-        last_muni_date = df.groupby('co_municipio_ibge')['dt_ciclo_bnafar'].max()
+        max_date = df['dt_posicao_estoque'].max()
+        last_muni_date = df.groupby('co_municipio_ibge')['dt_posicao_estoque'].max()
         delay_days = (max_date - last_muni_date).dt.days
         recency_score = (1 - (delay_days / 30)).clip(lower=0)
 
@@ -76,7 +76,7 @@ class BnafarAnalytics:
 
         pivot = df.pivot_table(
             index=['sg_uf', 'no_municipio', 'co_catmat', 'ds_produto'],
-            columns='dt_ciclo_bnafar',
+            columns='dt_posicao_estoque',
             values='qt_estoque',
             aggfunc='sum'
         )

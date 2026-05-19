@@ -19,6 +19,12 @@ class BnafarProcessor:
         df.columns = [c.lower().strip() for c in df.columns]
         df = df.rename(columns=COLUMN_ALIASES)
         
+        # Mandatory columns check (Bioethical and Clinical integrity)
+        mandatory_cols = ['sg_uf', 'co_municipio_ibge', 'qt_estoque', 'co_catmat']
+        missing = [c for c in mandatory_cols if c not in df.columns]
+        if missing:
+            raise KeyError(f"Missing mandatory columns for Bnafar processing: {missing}")
+
         for col, dtype in EXPECTED_SCHEMA.items():
             if col in df.columns:
                 try:

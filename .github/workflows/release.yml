@@ -9,7 +9,7 @@ on:
 
 jobs:
   quality:
-    name: Code Quality & Security
+    name: Code Quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,15 +17,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install Linting Tools
+      - name: Install dependencies
         run: pip install ruff mypy fhir.resources pandas pyarrow types-requests types-setuptools
-      - name: Run Ruff (Linting)
+      - name: Run Ruff
         run: ruff check .
-      - name: Run MyPy (Type Checking)
+      - name: Run MyPy
         run: mypy pybnafar/ --ignore-missing-imports
 
   test:
-    name: Unit Tests & Coverage
+    name: Unit Tests
     needs: quality
     runs-on: ubuntu-latest
     steps:
@@ -38,25 +38,33 @@ jobs:
         run: |
           pip install .[test]
           pip install pytest-cov
-      - name: Run Tests with Coverage
+      - name: Run Tests
         run: |
-          pytest --cov=pybnafar pybnafar/tests/ --cov-report=xml
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          pytest tests/ --cov=pybnafar --cov-report=xml
 
   publish-pypi:
     name: Publish to PyPI
     needs: test
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      id-token: write  # Mandatory for OIDC (Trusted Publishers)
     steps:
       - uses: actions/checkout@v4
-      - name: Build and Publish
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install build dependencies
+        run: pip install build
+      - name: Build binary wheel and source tarball
+        run: python -m build
+      - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          # If using Trusted Publishers, you don't need 'password'
+          # Just ensure the PyPI project is configured to trust this repo/workflow
+          skip-existing: true
 
   publish-docker:
     name: Publish Docker Image
@@ -78,7 +86,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: pybnafar/Dockerfile
+          file: Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |

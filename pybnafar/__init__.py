@@ -1,8 +1,8 @@
-from .api import Bnafar
-from .processor import BnafarProcessor
-from .downloader import BnafarDownloader
 from .analytics import BnafarAnalytics
-from .interop import BnafarInterop
+from .api import Bnafar
 from .diagnostics import BnafarDiagnostics
+from .downloader import BnafarDownloader
+from .interop import BnafarInterop
+from .processor import BnafarProcessor
 
 __version__ = "2.1.0"

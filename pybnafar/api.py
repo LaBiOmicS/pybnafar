@@ -1,29 +1,32 @@
-from .downloader import BnafarDownloader
-from .processor import BnafarProcessor
+import glob
+import os
+
+import pandas as pd
+
 from .analytics import BnafarAnalytics
 from .diagnostics import BnafarDiagnostics
+from .downloader import BnafarDownloader
 from .interop import BnafarInterop
+from .processor import BnafarProcessor
 from .utils import logger
-import os
-import glob
-import pandas as pd
+
 
 class Bnafar:
     """
     Main SDK for interacting with the Brazilian National Pharmaceutical Database (BNAFAR).
     Designed for scalability, auditability, and clinical intelligence.
     """
-    
-    def __init__(self, workspace: str = 'bnafar_system'):
+
+    def __init__(self, workspace: str = "bnafar_system"):
         self.workspace = os.path.abspath(workspace)
-        self.raw_dir = os.path.join(self.workspace, 'raw')
-        self.lake_dir = os.path.join(self.workspace, 'lake_partitioned')
-        self.manifest_dir = os.path.join(self.workspace, 'manifests')
-        
+        self.raw_dir = os.path.join(self.workspace, "raw")
+        self.lake_dir = os.path.join(self.workspace, "lake_partitioned")
+        self.manifest_dir = os.path.join(self.workspace, "manifests")
+
         os.makedirs(self.raw_dir, exist_ok=True)
         os.makedirs(self.lake_dir, exist_ok=True)
         os.makedirs(self.manifest_dir, exist_ok=True)
-        
+
         self.downloader = BnafarDownloader(workspace_dir=self.raw_dir)
         self.analytics = BnafarAnalytics()
         self.diagnostics = BnafarDiagnostics()
@@ -45,14 +48,14 @@ class Bnafar:
             if os.path.exists(os.path.join(self.manifest_dir, manifest_name)):
                 logger.debug(f"Snapshot already synchronized: {res['title']}")
                 continue
-            
+
             try:
-                csv_path = self.downloader.download(res['url'], f"{res['title']}.csv")
+                csv_path = self.downloader.download(res["url"], f"{res['title']}.csv")
                 BnafarProcessor.process_and_partition(
                     csv_path=csv_path,
                     output_dir=self.lake_dir,
                     manifest_dir=self.manifest_dir,
-                    metadata={'source_url': res['url'], 'snapshot': res['title']}
+                    metadata={"source_url": res["url"], "snapshot": res["title"]},
                 )
             except Exception as e:
                 logger.error(f"Sync failed for {res['title']}: {e}")
@@ -62,7 +65,7 @@ class Bnafar:
         Loads data using high-performance Hive-partition filtering.
         """
         import pyarrow.dataset as ds
-        
+
         # Check if any parquet files exist recursively
         parquet_files = glob.glob(os.path.join(self.lake_dir, "**/*.parquet"), recursive=True)
         if not os.path.exists(self.lake_dir) or not parquet_files:
@@ -70,20 +73,20 @@ class Bnafar:
             return pd.DataFrame()
 
         dataset = ds.dataset(self.lake_dir, format="parquet", partitioning="hive")
-        
+
         filter_expr = None
         if ufs:
             filter_expr = ds.field("sg_uf").isin(ufs)
-        
+
         if months:
             m_filter = ds.field("ano_mes").isin(months)
             if filter_expr is not None:
                 filter_expr = filter_expr & m_filter
             else:
                 filter_expr = m_filter
-            
+
         df = dataset.to_table(filter=filter_expr).to_pandas()
-        
+
         # Run automatic diagnostics on load
         self.diagnostics.check_geographic_bias(df)
         return df

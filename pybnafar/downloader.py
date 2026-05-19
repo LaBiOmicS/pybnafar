@@ -1,16 +1,19 @@
-import requests
-from bs4 import BeautifulSoup
 import os
 import time
-from typing import List, Dict
-from .utils import logger, sanitize_filename
+from typing import Dict, List
+
+import requests
+from bs4 import BeautifulSoup
+
 from .constants import OPENDATASUS_CKAN_API, OPENDATASUS_URL
+from .utils import logger, sanitize_filename
+
 
 class BnafarDownloader:
     """
     Intelligent Downloader: Official CKAN API + Scraper Fallback with Resilience.
     """
-    
+
     def __init__(self, workspace_dir: str):
         self.workspace_dir = workspace_dir
         os.makedirs(workspace_dir, exist_ok=True)
@@ -24,11 +27,11 @@ class BnafarDownloader:
                 with requests.Session() as s:
                     response = s.get(OPENDATASUS_CKAN_API, timeout=15)
                     response.raise_for_status()
-                    resources = response.json().get('result', {}).get('resources', [])
+                    resources = response.json().get("result", {}).get("resources", [])
                     for res in resources:
-                        if res.get('format', '').lower() == 'csv':
-                            sources.append({'title': res['name'], 'url': res['url']})
-                if sources: 
+                        if res.get("format", "").lower() == "csv":
+                            sources.append({"title": res["name"], "url": res["url"]})
+                if sources:
                     return sources
             except Exception as e:
                 logger.warning(f"Official API unavailable, switching to scraping: {e}")
@@ -36,29 +39,31 @@ class BnafarDownloader:
         # Fallback Scraping
         try:
             response = requests.get(OPENDATASUS_URL, timeout=15)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            for item in soup.find_all('li', class_='resource-item'):
-                link = item.find('a', class_='resource-url-analytics')
+            soup = BeautifulSoup(response.content, "html.parser")
+            for item in soup.find_all("li", class_="resource-item"):
+                link = item.find("a", class_="resource-url-analytics")
                 if link:
-                    sources.append({
-                        'title': item.find('a', class_='heading').get('title').strip(),
-                        'url': link['href']
-                    })
+                    sources.append(
+                        {
+                            "title": item.find("a", class_="heading").get("title").strip(),
+                            "url": link["href"],
+                        }
+                    )
         except Exception as e:
             logger.error(f"Total failure in fetching data sources: {e}")
-        
+
         return sources
 
     def download(self, url: str, filename: str, retries: int = 3) -> str:
         """Download with integrity check and automatic retries."""
         path = os.path.join(self.workspace_dir, sanitize_filename(filename))
-        
+
         for attempt in range(retries):
             try:
                 with requests.get(url, stream=True, timeout=60) as r:
                     r.raise_for_status()
-                    with open(path, 'wb') as f:
-                        for chunk in r.iter_content(chunk_size=1024*1024):
+                    with open(path, "wb") as f:
+                        for chunk in r.iter_content(chunk_size=1024 * 1024):
                             if chunk:
                                 f.write(chunk)
                 return path
@@ -71,4 +76,3 @@ class BnafarDownloader:
                     logger.error(f"Critical failure downloading {url}: {e}")
                     raise
         return path
-
